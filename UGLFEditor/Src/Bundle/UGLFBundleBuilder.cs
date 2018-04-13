@@ -6,8 +6,12 @@ using System.IO;
 
 public class UGLFBundleBuilder
 {
-    public static void BuildBundle(BuildTarget _targetPlatform, string _abResPath, string _bundleTargetPath)
+    public static void BuildBundle(BuildTarget _targetPlatform, string _abResPath, string _bundleTargetPath, bool _autoDelManifestFile = true)
     {
+        string directoryName = GetBundleSummaryFileName(_targetPlatform);
+        string realBundleTargetPath = Path.Combine(_bundleTargetPath, directoryName);
+        MakeDirectoryClean(realBundleTargetPath);
+
         List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
         foreach (string directory in Directory.GetDirectories(_abResPath))
         {
@@ -19,25 +23,57 @@ public class UGLFBundleBuilder
         }
 
         BuildAssetBundleOptions option = BuildAssetBundleOptions.ChunkBasedCompression | BuildAssetBundleOptions.ForceRebuildAssetBundle;
-        BuildPipeline.BuildAssetBundles(_bundleTargetPath, builds.ToArray(), option, _targetPlatform);
+        BuildPipeline.BuildAssetBundles(realBundleTargetPath, builds.ToArray(), option, _targetPlatform);
 
-        // rename
-        
-        //File.Move()
-
+        if (_autoDelManifestFile)
+        {
+            string[] files = Directory.GetFiles(realBundleTargetPath);
+            foreach(string file in files)
+            {
+                if(Path.GetExtension(file) == ".manifest")
+                {
+                    File.Delete(file);
+                }
+            }
+        }
     }
+
+    private static void MakeDirectoryClean(string _platformDirectoy)
+    {
+        if (Directory.Exists(_platformDirectoy))
+        {
+            Directory.Delete(_platformDirectoy,true);
+        }
+
+        Directory.CreateDirectory(_platformDirectoy);
+    }
+
 
     private static string GetBundleSummaryFileName(BuildTarget _targetPlatform)
     {
         switch (_targetPlatform)
         {
             case BuildTarget.StandaloneWindows64:
+            case BuildTarget.StandaloneWindows:
                 {
-
+                    return "Windows";
                 }
-                break;
+            case BuildTarget.Android:
+                {
+                    return "Android";
+                }
+            case BuildTarget.iOS:
+                {
+                    return "iOS";
+                }
+            case BuildTarget.StandaloneOSX:
+                {
+                    return "OSX";
+                }
+            default:
+                {
+                    return "Bundles";
+                }
         }
-
-        return "";
     }
 }

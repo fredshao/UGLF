@@ -45,6 +45,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Src\Action\UGLFAction.cs" />
+    <Compile Include="Src\Object\UGLFObject.cs" />
     <Compile Include="Src\UGLF.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
