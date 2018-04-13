@@ -16,5 +16,5 @@ Unity Game Logic Framework
 
 **分类文档:**
 
-[UI组建命名规范](./Docs/UI组件命名规则.md)
-[资源管理规范](./Docs/资源管理规范.md)
+1. [UI组建命名规范](./Docs/UI组件命名规则.md)
+2. [资源管理规范](./Docs/资源管理规范.md)
