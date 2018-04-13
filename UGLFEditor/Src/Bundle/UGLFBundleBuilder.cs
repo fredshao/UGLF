@@ -23,7 +23,6 @@ public class UGLFBundleBuilder
             return null;
         }
 
-        string logStr = "";
         string directoryName = GetBundleSummaryFileName(_targetPlatform);
         string realBundleTargetPath = Path.Combine(_bundleTargetPath, directoryName);
         MakeDirectoryClean(realBundleTargetPath);
@@ -41,28 +40,15 @@ public class UGLFBundleBuilder
         foreach (string directory in directories)
         {
             string bundleName = Path.GetFileNameWithoutExtension(directory);
-            string[] fileArray = Directory.GetFiles(directory, "*.*", SearchOption.TopDirectoryOnly);
-            List<string> fileList = new List<string>();
-            logStr += bundleName.ToLower() + ".ab\n";
-            foreach(string file in fileArray)
-            {
-                if(Path.GetExtension(file) == ".meta")
-                {
-                    continue;
-                }
-                fileList.Add(file);
-                logStr += "    -- " + file + "\n";
-            }
-
-            if (fileList.Count > 0)
+            string[] fileArray = GetAvaliableBundleAssetFile(directory);
+            
+            if (fileArray.Length > 0)
             {
                 AssetBundleBuild build = new AssetBundleBuild();
                 build.assetBundleName = bundleName + ".ab";
-                build.assetNames = fileList.ToArray();
+                build.assetNames = fileArray;
                 builds.Add(build);
             }
-
-            File.WriteAllText(Path.Combine(realBundleTargetPath, "log.txt"), logStr);
         }
 
         if(builds.Count == 0)
@@ -81,7 +67,12 @@ public class UGLFBundleBuilder
 
         string manifestBundleFile = new DirectoryInfo(realBundleTargetPath).Name;
         File.Delete(Path.Combine(realBundleTargetPath, manifestBundleFile));
-        return GetAllBundleInfoFromManifest(manifest);
+
+
+        Dictionary<string,Hash128> bundleHashDict = GetAllBundleInfoFromManifest(manifest);
+        GenerateBundleInfo(realBundleTargetPath, bundleHashDict);
+
+        return bundleHashDict;
     }
 
     /// <summary>
@@ -101,8 +92,6 @@ public class UGLFBundleBuilder
             return null;
         }
 
-        string logStr = "";
-
         MakeSureDirectoryExists(_bundleTargetPath);
 
         List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
@@ -118,28 +107,14 @@ public class UGLFBundleBuilder
         foreach (string directory in directories)
         {
             string bundleName = Path.GetFileNameWithoutExtension(directory);
-            string[] fileArray = Directory.GetFiles(directory, "*.*", SearchOption.TopDirectoryOnly);
-            List<string> fileList = new List<string>();
-            logStr += bundleName.ToLower() + ".ab\n";
-            foreach (string file in fileArray)
-            {
-                if (Path.GetExtension(file) == ".meta")
-                {
-                    continue;
-                }
-                fileList.Add(file);
-                logStr += "    -- " + file + "\n";
-            }
-
-            if (fileList.Count > 0)
+            string[] fileArray = GetAvaliableBundleAssetFile(directory);
+            if (fileArray.Length > 0)
             {
                 AssetBundleBuild build = new AssetBundleBuild();
                 build.assetBundleName = bundleName + ".ab";
-                build.assetNames = fileList.ToArray();
+                build.assetNames = fileArray;
                 builds.Add(build);
             }
-
-            File.WriteAllText(Path.Combine(_bundleTargetPath, "log.txt"), logStr);
         }
 
         if (builds.Count == 0)
@@ -178,9 +153,9 @@ public class UGLFBundleBuilder
             return null;
         }
 
-        string[] files = Directory.GetFiles(_abSingleResPath, "*.*", SearchOption.TopDirectoryOnly);
+        string[] files = GetAvaliableBundleAssetFile(_abSingleResPath);
 
-        if(files == null || files.Length == 0)
+        if (files == null || files.Length == 0)
         {
             Debug.LogError("未发现需要打包的资源");
             return null;
@@ -189,7 +164,7 @@ public class UGLFBundleBuilder
         string bundleName = Path.GetFileNameWithoutExtension(_abSingleResPath);
         AssetBundleBuild build = new AssetBundleBuild();
         build.assetBundleName = new DirectoryInfo(_abSingleResPath).Name + ".ab";
-        build.assetNames = GetAvaliableBundleAssetFile(_abSingleResPath);
+        build.assetNames = files;
 
         AssetBundleBuild[] builds = { build };
 
@@ -204,6 +179,33 @@ public class UGLFBundleBuilder
         string manifestBundleFile = new DirectoryInfo(_bundleTargetPath).Name;
         File.Delete(Path.Combine(_bundleTargetPath, manifestBundleFile));
         return GetAllBundleInfoFromManifest(manifest);
+    }
+
+
+    public static void GenerateBundleInfo(string _path, Dictionary<string,Hash128> _bundleHashDict)
+    {
+        
+        FileInfo[] files = new DirectoryInfo(_path).GetFiles();
+        string bundleInfoFile = Path.Combine(_path, "Bundles.Info");
+        string infoStr = "";
+        for(int i = 0; i < files.Length; ++i)
+        {
+            FileInfo info = files[i];
+
+            if(Path.GetExtension(info.Name) != ".ab")
+            {
+                continue;
+            }
+
+            infoStr += string.Format("{0},{1},{2}", info.Name, info.Length, _bundleHashDict[info.Name].ToString());
+
+            if (i + 1 != files.Length)
+            {
+                infoStr += '\n';
+            }
+        }
+
+        File.WriteAllText(bundleInfoFile, infoStr);
     }
 
 
