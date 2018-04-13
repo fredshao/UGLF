@@ -12,6 +12,9 @@ Unity Game Logic Framework
 1. ReferenceDlls是框架编写时所引用的Unity的一些DLL，这里使用的Unity版本在ReferenceDlls的"说明.txt"文件中标注
 2. 为了方便使用，框架不使用任何命名空间，但是为了避免和使用者原有代码产生冲突，每一个类会添加前缀 "UGLF"
 
-**资源管理规范:**
 
-1. ​
+
+**分类文档:**
+
+[UI组建命名规范](./Docs/UI组件命名规则.md)
+[资源管理规范](./Docs/资源管理规范.md)
