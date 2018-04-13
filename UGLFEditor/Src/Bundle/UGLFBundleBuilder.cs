@@ -184,7 +184,6 @@ public class UGLFBundleBuilder
 
     public static void GenerateBundleInfo(string _path, Dictionary<string,Hash128> _bundleHashDict)
     {
-        
         FileInfo[] files = new DirectoryInfo(_path).GetFiles();
         string bundleInfoFile = Path.Combine(_path, "Bundles.Info");
         string infoStr = "";
