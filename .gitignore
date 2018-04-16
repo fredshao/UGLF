@@ -1,22 +1,18 @@
 /.vs/
 /UGLF/obj/
 
-/UGLF/bin/Debug/UGLF.pdb
 /UGLF/bin/Debug/UnityEngine.dll
 /UGLF/bin/Debug/UnityEditor.dll
 /UGLF/bin/Debug/UnityEngine.UI.dll
 
-/UGLF/bin/Release/UGLF.pdb
 /UGLF/bin/Release/UnityEngine.dll
 /UGLF/bin/Release/UnityEditor.dll
 /UGLF/bin/Release/UnityEngine.UI.dll
 
-/UGLFEditor/bin/Debug/UGLFEditor.pdb
 /UGLFEditor/bin/Debug/UnityEngine.dll
 /UGLFEditor/bin/Debug/UnityEditor.dll
 /UGLFEditor/bin/Debug/UnityEngine.UI.dll
 
-/UGLFEditor/bin/Release/UGLFEditor.pdb
 /UGLFEditor/bin/Release/UnityEngine.dll
 /UGLFEditor/bin/Release/UnityEditor.dll
 /UGLFEditor/bin/Release/UnityEngine.UI.dll
