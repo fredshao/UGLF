@@ -5,6 +5,9 @@ using UnityEngine;
 using System.IO;
 
 public class UGLFBundleBuilder {
+
+    private const string BundleInfoFile = "bundles.info";
+
     /// <summary>
     /// 打包所有的 Bundle
     /// </summary>
@@ -63,7 +66,7 @@ public class UGLFBundleBuilder {
 
         Dictionary<string, Hash128> bundleHashDict = GetAllBundleInfoFromManifest(manifest);
         GenerateBundleInfo(realBundleTargetPath, bundleHashDict);
-
+        Debug.Log("Bundle打包完成!");
         return bundleHashDict;
     }
 
@@ -81,6 +84,10 @@ public class UGLFBundleBuilder {
             Debug.LogError("请选择一个有效的目录!");
             return null;
         }
+
+        string directoryName = GetBundleSummaryFileName(_targetPlatform);
+
+        _bundleTargetPath = Path.Combine(_bundleTargetPath, directoryName);
 
         MakeSureDirectoryExists(_bundleTargetPath);
 
@@ -118,7 +125,33 @@ public class UGLFBundleBuilder {
 
         string manifestBundleFile = new DirectoryInfo(_bundleTargetPath).Name;
         File.Delete(Path.Combine(_bundleTargetPath, manifestBundleFile));
-        return GetAllBundleInfoFromManifest(manifest);
+
+        Dictionary<string, Hash128> bundleHashDict = GetAllBundleInfoFromManifest(manifest);
+        Dictionary<string, BundleInfo> bundleInfoDict = LoadOriginBundleInfo(_bundleTargetPath);
+        Dictionary<string, ulong> fileSizeDict = GetFileSizeDict(_bundleTargetPath);
+
+        var enumer = bundleHashDict.GetEnumerator();
+        while (enumer.MoveNext())
+        {
+            string bundleName = enumer.Current.Key;
+            Hash128 bundleHash = enumer.Current.Value;
+            if (bundleInfoDict.ContainsKey(bundleName))
+            {
+                bundleInfoDict[bundleName].bundleSize = fileSizeDict[bundleName];
+                bundleInfoDict[bundleName].bundleHash = bundleHash;
+            }
+            else
+            {
+                BundleInfo info = new BundleInfo(bundleName, fileSizeDict[bundleName], bundleHash);
+                bundleInfoDict.Add(info.bundleName, info);
+            }
+        }
+
+        GenerateBundleInfo(_bundleTargetPath, bundleInfoDict);
+
+        Debug.Log("Bundle打包完成!");
+
+        return bundleHashDict;
     }
 
     /// <summary>
@@ -143,6 +176,13 @@ public class UGLFBundleBuilder {
             return null;
         }
 
+        string directoryName = GetBundleSummaryFileName(_targetPlatform);
+
+        _bundleTargetPath = Path.Combine(_bundleTargetPath, directoryName);
+
+        MakeSureDirectoryExists(_bundleTargetPath);
+
+
         string bundleName = Path.GetFileNameWithoutExtension(_abSingleResPath);
         AssetBundleBuild build = new AssetBundleBuild();
         build.assetBundleName = new DirectoryInfo(_abSingleResPath).Name + ".ab";
@@ -159,13 +199,53 @@ public class UGLFBundleBuilder {
 
         string manifestBundleFile = new DirectoryInfo(_bundleTargetPath).Name;
         File.Delete(Path.Combine(_bundleTargetPath, manifestBundleFile));
-        return GetAllBundleInfoFromManifest(manifest);
+
+
+        Dictionary<string, Hash128> bundleHashDict = GetAllBundleInfoFromManifest(manifest);
+        Dictionary<string, BundleInfo> bundleInfoDict = LoadOriginBundleInfo(_bundleTargetPath);
+        Dictionary<string, ulong> fileSizeDict = GetFileSizeDict(_bundleTargetPath);
+
+        var enumer = bundleHashDict.GetEnumerator();
+        while (enumer.MoveNext())
+        {
+            bundleName = enumer.Current.Key;
+            Hash128 bundleHash = enumer.Current.Value;
+            if (bundleInfoDict.ContainsKey(bundleName))
+            {
+                bundleInfoDict[bundleName].bundleSize = fileSizeDict[bundleName];
+                bundleInfoDict[bundleName].bundleHash = bundleHash;
+            }
+            else
+            {
+                BundleInfo info = new BundleInfo(bundleName, fileSizeDict[bundleName], bundleHash);
+                bundleInfoDict.Add(info.bundleName, info);
+            }
+        }
+
+        GenerateBundleInfo(_bundleTargetPath, bundleInfoDict);
+
+        Debug.Log("Bundle打包完成!");
+        return bundleHashDict;
+
+    }
+
+    private static Dictionary<string, ulong> GetFileSizeDict(string _path)
+    {
+        Dictionary<string, ulong> fileSizeDict = new Dictionary<string, ulong>();
+        FileInfo[] files = new DirectoryInfo(_path).GetFiles();
+        for(int i = 0; i < files.Length; ++i)
+        {
+            FileInfo info = files[i];
+            fileSizeDict.Add(info.Name, (ulong)info.Length);
+        }
+
+        return fileSizeDict;
     }
 
 
-    public static void GenerateBundleInfo(string _path, Dictionary<string, Hash128> _bundleHashDict) {
+    private static void GenerateBundleInfo(string _path, Dictionary<string, Hash128> _bundleHashDict) {
         FileInfo[] files = new DirectoryInfo(_path).GetFiles();
-        string bundleInfoFile = Path.Combine(_path, "Bundles.Info");
+        string bundleInfoFile = Path.Combine(_path, BundleInfoFile);
         string infoStr = "";
         for (int i = 0; i < files.Length; ++i) {
             FileInfo info = files[i];
@@ -181,6 +261,27 @@ public class UGLFBundleBuilder {
             }
         }
 
+        File.WriteAllText(bundleInfoFile, infoStr);
+    }
+
+    private static void GenerateBundleInfo(string _path, Dictionary<string, BundleInfo> _bundleInfoDict)
+    {
+        var enumer = _bundleInfoDict.GetEnumerator();
+        string infoStr = "";
+        int index = 0;
+        while (enumer.MoveNext())
+        {
+            BundleInfo info = enumer.Current.Value;
+            infoStr += string.Format("{0},{1},{2}", info.bundleName, info.bundleSize, info.bundleHash.ToString());
+
+            ++index;
+            if(index != _bundleInfoDict.Count)
+            {
+                infoStr += '\n';
+            }
+        }
+
+        string bundleInfoFile = Path.Combine(_path, BundleInfoFile);
         File.WriteAllText(bundleInfoFile, infoStr);
     }
 
@@ -282,6 +383,47 @@ public class UGLFBundleBuilder {
             default: {
                     return "Bundles";
                 }
+        }
+    }
+
+
+    private static Dictionary<string, BundleInfo> LoadOriginBundleInfo(string _targetPath)
+    {
+        Dictionary<string, BundleInfo> bundleInfoDict = new Dictionary<string, BundleInfo>();
+        string path = Path.Combine(_targetPath, BundleInfoFile);
+        if (File.Exists(path))
+        {
+            string text = File.ReadAllText(path);
+            string[] bundleLines = text.Split('\n');
+            
+            foreach(string bundleInfoStr in bundleLines)
+            {
+                string[] bundleInfoArray = bundleInfoStr.Split(',');
+                string bundleName = bundleInfoArray[0];
+                ulong bundleSize = ulong.Parse(bundleInfoArray[1]);
+                Hash128 bundleHash = Hash128.Parse(bundleInfoArray[2]);
+                BundleInfo info = new BundleInfo(bundleName, bundleSize, bundleHash);
+                bundleInfoDict.Add(info.bundleName, info);
+            }
+
+            
+        }
+
+        return bundleInfoDict;
+    }
+
+
+    internal class BundleInfo
+    {
+        public string bundleName;
+        public ulong bundleSize;
+        public Hash128 bundleHash;
+
+        public BundleInfo(string _bundleName, ulong _bundleSize, Hash128 _bundleHash)
+        {
+            bundleName = _bundleName;
+            bundleSize = _bundleSize;
+            bundleHash = _bundleHash;
         }
     }
 }

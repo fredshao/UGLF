@@ -25,7 +25,8 @@
         <Command>
           <type>AfterBuild</type>
           <command>cp bin/Debug/UGLFEditor.dll ../../Tmp/UGLFTest/Assets/Plugins/Editor/UGLFEditor.dll</command>
-          <workingdir></workingdir>
+          <workingdir>
+          </workingdir>
         </Command>
       </CustomCommands>
     </CustomCommands>
@@ -56,6 +57,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Src\Bundle\UGLFBundleBuilder.cs" />
+    <Compile Include="Src\Bundle\UGLFBundleEditor.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
