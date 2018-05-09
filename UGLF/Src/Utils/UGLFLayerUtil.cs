@@ -23,4 +23,13 @@
     {
         int layer = LayerMask.NameToLayer(_layerName);
         SetGameObjectLayer(_obj, layer);
+    }    public bool IsLayerRendered(Camera _camera, int _layer)
+    {
+        Camera camera = _camera;
+        if(camera == null)
+        {
+            camera = Camera.main;
+        }
+
+        return ((camera.cullingMask & (1 << _layer)) != 0);
     }}
