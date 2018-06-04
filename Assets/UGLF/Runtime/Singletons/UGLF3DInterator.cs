@@ -4,6 +4,9 @@ using UnityEngine;
 
 public delegate void UGLFHitObjectDelegate(GameObject _hitedObj);
 
+/// <summary>
+/// 用于检测世界中哪个物体被点击了，如果点击了UI，则不触发3D物体点击回调事件
+/// </summary>
 public class UGLF3DInterator : MonoBehaviour {
 
     private event UGLFHitObjectDelegate onHitGameObject;

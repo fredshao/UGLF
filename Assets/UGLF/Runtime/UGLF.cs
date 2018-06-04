@@ -18,7 +18,9 @@ public class UGLF : MonoBehaviour {
         }
     }
 
-
+    /// <summary>
+    /// 3D GameObject交互器
+    /// </summary>
     private UGLF3DInterator _3dInterator = null;
     public UGLF3DInterator interator3D {
         get { return _3dInterator; }
