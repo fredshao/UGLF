@@ -297,7 +297,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\UGLF\Runtime\Bundle\Action\UGLFAction.cs" />
+    <Compile Include="Assets\UGLF\Runtime\Action\UGLFAction.cs" />
     <Compile Include="Assets\UGLF\Runtime\Bundle\UGLFBundle.cs" />
     <Compile Include="Assets\UGLF\Runtime\Object\UGLFObject.cs" />
     <Compile Include="Assets\UGLF\Runtime\Singletons\UGLF3DInterator.cs" />

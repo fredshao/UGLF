@@ -123,5 +123,26 @@ public static class UGLFUtil
     #endregion
 
 
+    #region 动画相关
+    public static bool IsAnimPlaying(Animator _animator, string _animName)
+    {
+        AnimatorClipInfo[] clips = _animator.GetCurrentAnimatorClipInfo(0);
+        if (clips != null && clips.Length > 0)
+        {
+            if (clips[0].clip.name.ToLower().Contains(_animName.ToLower()))
+            {
+                AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+                if (stateInfo.normalizedTime < 1.0f)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    #endregion
+
 
 }
